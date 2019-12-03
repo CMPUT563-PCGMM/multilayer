@@ -4,9 +4,10 @@ import random
 import pickle
 import itertools
 import copy
-import objects
+# import .objects
+from multilayer import objects
 
-possible_tiles = ['F', 'B', 'M', 'P', 'O', 'I', 'D', 'S', '-']
+possible_tiles = ['F', 'B', 'M', 'P', 'D', 'S', '-', 'C']
 
 def read_map_directory(map_directory):
 	path = map_directory
@@ -57,8 +58,8 @@ def config_extract(map_array,regions_map, depenndancy_matrix, model_dict):
             map_submatrix = map_array[i:i+sub_matrix_height, j:j+sub_matrix_width]
             regions_map_submatrix = regions_map[:, i:i+sub_matrix_height, j:j+sub_matrix_width]
             config, key = config_reshape(map_submatrix, regions_map_submatrix, depenndancy_matrix)
-            #config = tuple(config)
-            config = tuple(list(config.ravel()))
+            config = tuple(config)
+            #config = tuple(list(config.ravel()))
             if not config in model_dict:
                 model_dict[config] = objects.tile_values(key)
             else:
@@ -82,7 +83,7 @@ def config_reshape(map_submatrix, regions_map_submatrix, depenndancy_matrix):
                 conf_list.append(regions_map_submatrix[0, i, j])
                 conf_list.append(regions_map_submatrix[1, i, j])
                 desired_tile = map_submatrix[i,j]
-    return config, desired_tile  
+    return conf_list, desired_tile  
 
 
 def fliper(config):
@@ -151,11 +152,11 @@ def generate_next_tile(initial_map, regions_map, model_dict_list, dependancy_mat
     sub_initial_map = initial_map[i-dependancy_matrix_height+1:i+1,j-dependancy_matrix_width+1:j+1]
     regions_map_sub_matrix = regions_map[:,i-dependancy_matrix_height+1:i+1,j-dependancy_matrix_width+1:j+1]
     config, key = config_reshape(sub_initial_map, regions_map_sub_matrix, dependancy_matrix)
-    #config = tuple(config)
-    config = tuple(list(config.ravel()))
+    config = tuple(config)
+    #config = tuple(list(config.ravel()))
     if config in model_dict:
         initial_map[i,j] = model_dict[config].generate_new_tile()
-        print(model_index)
+        # print(model_index)
     elif model_index > 0:
         generate_next_tile(initial_map, regions_map, model_dict_list, dependancy_matrix_list, model_index-1, i, j)
     else:
@@ -188,12 +189,13 @@ def generate_dependency_matrix():
     return(list_of_dependency_matrix)
 
 
-def create_all_models(list_of_dependency_matrix, regions_map, files):
+def create_all_models(list_of_dependency_matrix, regions_map, training):
     list_of_models = []
     for each_dependancy_matrix in list_of_dependency_matrix:
         model_dict = {}
-        for i in range(len(files)):
-            sample = read_file(files[i])
+        for i in range(len(training)):
+            # sample = read_file(files[i])
+            sample = training[i]
             confs = fliper(sample)
             for each_conf in confs:
                 config_extract(each_conf, regions_map, each_dependancy_matrix, model_dict)
